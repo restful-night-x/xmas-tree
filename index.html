@@ -4713,10 +4713,23 @@ return orthographicDepthToViewZ(depth,cameraNear,cameraFar);
   raf(frame);
 
   // 轻触起始画面就开始放背景音乐；等页面自己的音频接上后自动让出
+  var __bgmRemote = 'https://aka.doubaocdn.com/s/Vqn7u9dR2M';
   var bgm = null, bgmStop = null;
+  // 提前把整首曲子拉成本地 Blob，规避网络抖动导致的断断续续
+  (function(){
+    try {
+      fetch(__bgmRemote).then(function(r){ return r.blob(); }).then(function(b){
+        window.__bgmBlobUrl = URL.createObjectURL(b);
+        if(bgm && bgm.__remote){
+          try { bgm.src = window.__bgmBlobUrl; var q = bgm.play(); if(q && q.catch) q.catch(function(){}); } catch(e){}
+        }
+      }).catch(function(){});
+    } catch(e){}
+  })();
   function startMusic(){
     if(bgm) return;
-    bgm = new Audio('https://aka.doubaocdn.com/s/Vqn7u9dR2M');
+    bgm = new Audio(window.__bgmBlobUrl || __bgmRemote);
+    bgm.__remote = !window.__bgmBlobUrl;
     bgm.loop = true;
     bgm.preload = 'auto';
     bgm.volume = 0;
